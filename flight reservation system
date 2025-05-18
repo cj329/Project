@@ -1,0 +1,171 @@
+import random
+
+
+flights = {
+    "FL001": {
+        "origin": "New York",
+        "destination": "London",
+        "date": "2025-04-25",
+        "time": "14:30",
+        "price": 500,
+        "seats": ["1A", "1B", "2A", "2B"]
+    },
+    "FL002": {
+        "origin": "Tokyo",
+        "destination": "Singapore",
+        "date": "2025-04-26",
+        "time": "09:00",
+        "price": 400,
+        "seats": ["1A", "1B", "2A", "2B"]
+    },
+    "FL003": {
+        "origin": "Paris",
+        "destination": "Dubai",
+        "date": "2025-04-27",
+        "time": "18:00",
+        "price": 600,
+        "seats": ["1A", "1B", "2A", "2B"]
+    }
+}
+
+users = {}
+bookings = []
+
+def register_or_login():
+    print("\nUser Registration/Login")
+    username = input("Username: ")
+    password = input("Password: ")
+
+    if username in users:
+        if users[username] == password:
+            print("Login successful.")
+        else:
+            print("Incorrect password.")
+            return None
+    else:
+        users[username] = password
+        print("Registration successful.")
+    return username
+
+
+def view_all_flights():
+    print("\nAll Available Flights:")
+    for fid, details in flights.items():
+        print(f"Flight ID: {fid}, From: {details['origin']} To: {details['destination']}, "
+              f"Date: {details['date']} Time: {details['time']}, Price: ${details['price']}, "
+              f"Available Seats: {', '.join(details['seats'])}")
+
+
+def search_flight():
+    print("\nFlight Search")
+    origin = input("Enter origin: ")
+    destination = input("Enter destination: ")
+    date = input("Enter date (YYYY-MM-DD): ")
+
+    matches = []
+    for fid, details in flights.items():
+        if (details["origin"].lower() == origin.lower() and
+                details["destination"].lower() == destination.lower() and
+                details["date"] == date):
+            matches.append((fid, details))
+
+    if not matches:
+        print("No flights found.")
+        return None
+    else:
+        print("\nMatching Flights:")
+        for fid, details in matches:
+            print(f"Flight ID: {fid}, Time: {details['time']}, Price: ${details['price']}, "
+                  f"Available Seats: {', '.join(details['seats'])}")
+        return matches
+
+
+def select_seats(flight_id, passenger_count):
+    available = flights[flight_id]["seats"]
+    if len(available) < passenger_count:
+        print("Not enough seats available.")
+        return None
+    chosen = []
+    for i in range(passenger_count):
+        seat = input(f"Choose seat {i+1} from {available}: ")
+        if seat in available:
+            chosen.append(seat)
+            available.remove(seat)
+        else:
+            print("Invalid or unavailable seat.")
+            return None
+    return chosen
+
+
+def confirm_booking(username, flight_id, seats):
+    flight = flights[flight_id]
+    total = flight["price"] * len(seats)
+    booking_id = f"B-{random.randint(1000,9999)}"
+
+    print("\nBooking Summary:")
+    print(f"Booking ID: {booking_id}")
+    print(f"Flight: {flight_id} From: {flight['origin']} To: {flight['destination']}")
+    print(f"Date: {flight['date']} Time: {flight['time']}")
+    print(f"Seats: {', '.join(seats)}")
+    print(f"Total Price: ${total}")
+
+    confirm = input("Confirm payment (yes/no): ").strip().lower()
+    if confirm == 'yes':
+        bookings.append({
+            "booking_id": booking_id,
+            "user": username,
+            "flight_id": flight_id,
+            "seats": seats,
+            "price": total
+        })
+        print("Booking confirmed. E-ticket generated!")
+    else:
+        print("Booking cancelled.")
+
+
+def view_user_bookings(username):
+    print("\nYour Bookings:")
+    found = False
+    for b in bookings:
+        if b["user"] == username:
+            found = True
+            print(f"Booking ID: {b['booking_id']}, Flight: {b['flight_id']}, Seats: {', '.join(b['seats'])}, Price: ${b['price']}")
+    if not found:
+        print("No bookings found.")
+
+
+def main():
+    user = register_or_login()
+    if not user:
+        return
+
+    while True:
+        print("\nMain Menu:")
+        print("1. View All Flights")
+        print("2. Search and Book Flight")
+        print("3. View My Bookings")
+        print("4. Exit")
+
+        choice = input("Choose option: ")
+        if choice == "1":
+            view_all_flights()
+        elif choice == "2":
+            results = search_flight()
+            if results:
+                selected_id = input("Enter Flight ID to book: ")
+                if selected_id in flights:
+                    count = int(input("Number of passengers: "))
+                    selected_seats = select_seats(selected_id, count)
+                    if selected_seats:
+                        confirm_booking(user, selected_id, selected_seats)
+        elif choice == "3":
+            view_user_bookings(user)
+        elif choice == "4":
+            print("Thanks for using the Flight Reservation System!")
+            break
+        else:
+            print("Invalid option.")
+
+
+if __name__ == "__main__":
+    main()
